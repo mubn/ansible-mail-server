@@ -1,0 +1,36 @@
+---
+- name: Add the rspamd apt key
+  apt_key:
+    url: https://rspamd.com/apt-stable/gpg.key
+    state: present
+
+- name: Add rspamd repository
+  apt_repository:
+    repo: "deb http://rspamd.com/apt-stable/ stretch main"
+    state: present
+
+- name: Update
+  apt: update_cache=yes
+  tags:
+    - dependencies
+
+- name: Upgrade
+  apt: upgrade=safe
+
+- name: Set hostname
+  hostname:
+    name: mail
+
+- name: Install programs
+  apt: pkg={{ item }} state=installed
+  with_items:
+    - certbot
+    - mariadb-server
+    - dovecot-core
+    - dovecot-imapd
+    - dovecot-lmtpd
+    - dovecot-mysql
+    - dovecot-sieve
+    - dovecot-managesieved
+    - rspamd
+    - redis-server

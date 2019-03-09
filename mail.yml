@@ -1,0 +1,13 @@
+---
+# This is the top-level playbook
+
+- hosts: all
+  user: root
+
+  roles:
+    - general
+    - dovecot
+    - mariadb
+    - postfix
+    - redis
+    - rspamd
