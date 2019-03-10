@@ -4,6 +4,22 @@
     name: vmail
     home: /var/vmail
 
+- name: Create mail user sieve directory
+  file:
+    path: /var/vmail/sieve/global
+    state: directory
+    owner: vmail
+    group: vmail
+    mode: 0770
+
+- name: Create mail user mailbox directory
+  file:
+    path: /var/vmail/mailboxes
+    state: directory
+    owner: vmail
+    group: vmail
+    mode: 0770
+
 - name: Add the rspamd apt key
   apt_key:
     url: https://rspamd.com/apt-stable/gpg.key
