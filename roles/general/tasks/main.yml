@@ -16,15 +16,9 @@
 
 - name: Update
   apt: update_cache=yes
-  tags:
-    - dependencies
 
 - name: Upgrade
   apt: upgrade=safe
-
-- name: Set hostname
-  hostname:
-    name: mail
 
 - name: Install programs
   apt: pkg={{ item }} state=installed
@@ -39,3 +33,19 @@
     - dovecot-managesieved
     - rspamd
     - redis-server
+
+- name: Set hostname
+  hostname:
+    name: "{{ hostname }}"
+
+- name: Add hostname to /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: "^127.0.1.1"
+    line: "127.0.1.1 {{ fqdn }} {{ hostname }}"
+    state: present
+
+- name: Restart systemd-logind
+  service:
+    name: systemd-logind
+    state: restarted
