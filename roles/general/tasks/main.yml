@@ -1,4 +1,9 @@
 ---
+- name: Create mail user
+  user:
+    name: vmail
+    home: /var/vmail
+
 - name: Add the rspamd apt key
   apt_key:
     url: https://rspamd.com/apt-stable/gpg.key
