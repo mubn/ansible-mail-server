@@ -1,2 +1,16 @@
 ---
 # tasks file for mariadb
+- name: Create user vmail
+  command: >
+    mysql --execute="grant select on vmail.* to 'vmail'@'localhost' identified by '{{ vmail_pass }}';"
+  tags: mysql
+
+- name: Copy database schema
+  copy:
+    src: files/schema.sql
+    dest: /tmp
+  tags: mysql
+
+- name: Import database schema
+  command: mysql --execute="source /tmp/schema.sql;"
+  tags: mysql
