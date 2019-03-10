@@ -6,6 +6,7 @@
 
   roles:
     - general
+    - certbot
     - dovecot
     - mariadb
     - postfix

@@ -1,0 +1,11 @@
+---
+- name: Setup cron for weekly cert renew
+  cron:
+    name: certbot renew
+    minute: 20
+    hour: 2
+    weekday: 0
+    job: "certbot renew --renew-hook 'systemctl reload dovecot; systemctl reload postfix' --quiet"
+
+- name: Generate certificates
+  shell: certbot certonly --standalone --rsa-key-size 4096 -d {{ mail_fqdn }} -d {{ imap_fqdn }} -d {{ smtp_fqdn }} -m {{email_for_updates}} --agree-tos

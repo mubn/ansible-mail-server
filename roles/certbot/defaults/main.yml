@@ -1,0 +1,6 @@
+---
+# defaults file for certbot
+mail_fqdn: my.mail.server
+smtp_fqdn: smtp.mail.server
+imap_fqdn: imap.mail.server
+email_for_updates: postmaster@mail.server
