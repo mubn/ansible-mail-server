@@ -1,2 +1,54 @@
 ---
 # tasks file for dovecot
+- name: Delete default config
+  file:
+    state: absent
+    path: /etc/dovecot/
+  tags: dovecot
+
+- name: Create config directory
+  file:
+    path: /etc/dovecot
+    state: directory
+  tags: dovecot
+
+- name: Template dovecot.conf
+  template:
+    src: templates/dovecot.j2
+    dest: /etc/dovecot/dovecot.conf
+    mode: "0644"
+  tags: dovecot
+
+- name: Template dovecot-sql.conf
+  template:
+    src: templates/dovecot-sql.j2
+    dest: /etc/dovecot/dovecot.conf
+    mode: "0440"
+  tags: dovecot
+
+- name: Copy spam-global.sieve
+  copy:
+    src: files/spam-global.sieve
+    dest: /var/vmail/sieve/global/spam-global.sieve
+    owner: vmail
+    group: vmail
+    mode: 0644
+  tags: dovecot
+
+- name: Copy learn-spam.sieve
+  copy:
+    src: files/learn-spam.sieve
+    dest: /var/vmail/sieve/global/learn-spam.sieve
+    owner: vmail
+    group: vmail
+    mode: 0644
+  tags: dovecot
+
+- name: Copy learn-ham.sieve
+  copy:
+    src: files/learn-ham.sieve
+    dest: /var/vmail/sieve/global/learn-ham.sieve
+    owner: vmail
+    group: vmail
+    mode: 0644
+  tags: dovecot
