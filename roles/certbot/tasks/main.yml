@@ -14,4 +14,4 @@
 
 - name: Generate certificates
   shell: certbot certonly --standalone --rsa-key-size 4096 -d {{ mail_fqdn }} -d {{ imap_fqdn }} -d {{ smtp_fqdn }} -m {{email_for_updates}} --agree-tos
-  when: live_cert.stat.exists
+  when: live_cert.stat.exists == False

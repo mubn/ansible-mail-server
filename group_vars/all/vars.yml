@@ -1,0 +1,9 @@
+---
+fqdn: mail.my.server
+hostname: mail
+ip_address: "{{ ansible_default_ipv4.address }}"
+mail_fqdn: mail.my.server
+smtp_fqdn: smtp.my.server
+imap_fqdn: imap.my.server
+email_for_updates: mail@my.server
+vmail_pass: "*5A1F511396D3AA6FE0F6DBC0A1220B2095C39434"

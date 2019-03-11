@@ -1,4 +1,0 @@
----
-fqdn: my.mail.server
-hostname: my
-ip_address: "{{ ansible_default_ipv4.address }}"
