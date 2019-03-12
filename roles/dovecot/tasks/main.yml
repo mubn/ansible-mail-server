@@ -32,7 +32,7 @@
     dest: /var/vmail/sieve/global/spam-global.sieve
     owner: vmail
     group: vmail
-    mode: 0644
+    mode: "0644"
   tags: dovecot
 
 - name: Copy learn-spam.sieve
@@ -41,7 +41,7 @@
     dest: /var/vmail/sieve/global/learn-spam.sieve
     owner: vmail
     group: vmail
-    mode: 0644
+    mode: "0644"
   tags: dovecot
 
 - name: Copy learn-ham.sieve
@@ -50,5 +50,5 @@
     dest: /var/vmail/sieve/global/learn-ham.sieve
     owner: vmail
     group: vmail
-    mode: 0644
+    mode: "0644"
   tags: dovecot

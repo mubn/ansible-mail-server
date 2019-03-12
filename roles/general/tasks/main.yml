@@ -49,6 +49,8 @@
     - dovecot-managesieved
     - rspamd
     - redis-server
+    - postfix
+    - postfix-mysql
 
 - name: Set hostname
   hostname:

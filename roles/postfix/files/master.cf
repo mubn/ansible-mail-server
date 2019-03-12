@@ -1,0 +1,71 @@
+# ==========================================================================
+# service type  private unpriv  chroot  wakeup  maxproc command + args
+#               (yes)   (yes)   (no)    (never) (100)
+# ==========================================================================
+
+###
+### Postscreen-Service: Prüft eingehende SMTP-Verbindungen auf Spam-Server
+###
+smtp      inet  n       -       y       -       1       postscreen
+    -o smtpd_sasl_auth_enable=no
+###
+### SMTP-Daemon hinter Postscreen.
+###
+smtpd     pass  -       -       y       -       -       smtpd
+###
+### dnsblog führt DNS-Abfragen für Blocklists durch
+###
+dnsblog   unix  -       -       y       -       0       dnsblog
+###
+### tlsproxy gibt Postscreen TLS support
+###
+tlsproxy  unix  -       -       y       -       0       tlsproxy
+###
+### Submission-Zugang für Clients: Für Mailclients gelten andere Regeln, als für andere Mailserver (siehe smtpd_ in main.cf)
+###
+submission inet n       -       y       -       -       smtpd
+    -o syslog_name=postfix/submission
+    -o smtpd_tls_security_level=encrypt
+    -o smtpd_sasl_auth_enable=yes
+    -o smtpd_sasl_type=dovecot
+    -o smtpd_sasl_path=private/auth
+    -o smtpd_sasl_security_options=noanonymous
+    -o smtpd_client_restrictions=$mua_client_restrictions
+    -o smtpd_sender_restrictions=$mua_sender_restrictions
+    -o smtpd_relay_restrictions=$mua_relay_restrictions
+    -o milter_macro_daemon_name=ORIGINATING
+    -o smtpd_sender_login_maps=mysql:/etc/postfix/sql/sender-login-maps.cf
+    -o smtpd_helo_required=no
+    -o smtpd_helo_restrictions=
+    -o cleanup_service_name=submission-header-cleanup
+###
+### Weitere wichtige Dienste für den Serverbetrieb
+###
+pickup    unix  n       -       y       60      1       pickup
+cleanup   unix  n       -       y       -       0       cleanup
+qmgr      unix  n       -       n       300     1       qmgr
+tlsmgr    unix  -       -       y       1000?   1       tlsmgr
+rewrite   unix  -       -       y       -       -       trivial-rewrite
+bounce    unix  -       -       y       -       0       bounce
+defer     unix  -       -       y       -       0       bounce
+trace     unix  -       -       y       -       0       bounce
+verify    unix  -       -       y       -       1       verify
+flush     unix  n       -       y       1000?   0       flush
+proxymap  unix  -       -       n       -       -       proxymap
+proxywrite unix -       -       n       -       1       proxymap
+smtp      unix  -       -       y       -       -       smtp
+relay     unix  -       -       y       -       -       smtp
+showq     unix  n       -       y       -       -       showq
+error     unix  -       -       y       -       -       error
+retry     unix  -       -       y       -       -       error
+discard   unix  -       -       y       -       -       discard
+local     unix  -       n       n       -       -       local
+virtual   unix  -       n       n       -       -       virtual
+lmtp      unix  -       -       y       -       -       lmtp
+anvil     unix  -       -       y       -       1       anvil
+scache    unix  -       -       y       -       1       scache
+###
+### Cleanup-Service um MUA header zu entfernen
+###
+submission-header-cleanup unix n - n    -       0       cleanup
+    -o header_checks=regexp:/etc/postfix/submission_header_cleanup
