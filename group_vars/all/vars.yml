@@ -1,8 +1,8 @@
 ---
-fqdn: mail.unettec.com
+fqdn: mail.my.server
 hostname: mail
 ip_address: "{{ ansible_default_ipv4.address }}"
-mail_fqdn: mail.unettec.com
-smtp_fqdn: smtp.unettec.com
-imap_fqdn: imap.unettec.com
-email_for_updates: unettec@marekurban.de
+mail_fqdn: "{{ fqdn }}"
+smtp_fqdn: smtp.my.server
+imap_fqdn: imap.my.server
+email_for_updates: mail@my.server
