@@ -1,2 +1,78 @@
 ---
 # tasks file for rspamd
+- name: Template worker-controller.inc
+  template:
+    src: templates/worker-controller.j2
+    dest: /etc/rspamd/local.d/worker-proxy.inc
+  tags: rspamd
+
+- name: Copy classifier-bayes.conf
+  copy:
+    src: files/classifier-bayes.conf
+    dest: /etc/rspamd/local.d/classifier-bayes.conf
+  tags: rspamd
+
+- name: Copy logging.inc
+  copy:
+    src: files/logging.inc
+    dest: /etc/rspamd/local.d/logging.inc
+  tags: rspamd
+
+- name: Copy milter_headers.conf
+  copy:
+    src: files/milter_headers.conf
+    dest: /etc/rspamd/local.d/milter_headers.conf
+  tags: rspamd
+
+- name: Copy options.inc
+  copy:
+    src: files/options.inc
+    dest: /etc/rspamd/local.d/options.inc
+  tags: rspamd
+
+- name: Copy worker-normal.inc
+  copy:
+    src: files/worker-proxy.inc
+    dest: /etc/rspamd/local.d/worker-proxy.inc
+  tags: rspamd
+
+- name: Create directory for dkim
+  file:
+    path: /var/lib/rspamd/dkim/
+    state: directory
+    owner: _rspamd
+    group: _rspamd
+    mode: "0440"
+  tags: rspamd
+
+- name: Copy and decrypt private key
+  copy:
+    src: files/2019.key
+    dest: /var/lib/rspamd/dkim/2019.key
+    decrypt: true
+    owner: _rspamd
+    group: _rspamd
+    mode: "0440"
+  tags: rspamd
+
+- name: Copy arc.conf
+  copy:
+    src: files/arc.conf
+    dest: /etc/rspamd/local.d/arc.conf
+    owner: _rspamd
+    group: _rspamd
+    mode: "0440"
+  tags: rspamd
+
+- name: Copy dkim_signing.conf
+  copy:
+    src: files/dkim_signing.conf
+    dest: /etc/rspamd/local.d/dkim_signing.conf
+    owner: _rspamd
+    group: _rspamd
+    mode: "0440"
+  tags: rspamd
+
+- name: Reload Rspamd
+  command: systemctl reload rspamd
+  tags: rspamd
