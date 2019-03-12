@@ -10,5 +10,4 @@
     - dovecot
     - mariadb
     - postfix
-    - redis
     - rspamd

@@ -73,6 +73,15 @@
     mode: "0440"
   tags: rspamd
 
+- name: Copy redis.conf
+  copy:
+    src: files/redis.conf
+    dest: /etc/rspamd/local.d/redis.conf
+    owner: _rspamd
+    group: _rspamd
+    mode: "0440"
+  tags: redis
+
 - name: Reload Rspamd
   command: systemctl reload rspamd
   tags: rspamd

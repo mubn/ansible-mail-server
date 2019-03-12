@@ -51,6 +51,7 @@
     - redis-server
     - postfix
     - postfix-mysql
+    - redis-server
 
 - name: Set hostname
   hostname:
