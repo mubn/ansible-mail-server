@@ -11,6 +11,22 @@
     dest: /tmp
   tags: mysql
 
+- name: Copy mail config
+  template:
+    src: templates/config.j2
+    dest: /tmp/config.sql
+  tags: mysql
+
 - name: Import database schema
   command: mysql --execute="source /tmp/schema.sql;"
+  tags: mysql
+
+- name: Import mail config
+  command: mysql --execute="source /tmp/config.sql;"
+  tags: mysql
+
+- name: Delete mail config
+  file:
+    state: absent
+    path: /tmp/config.sql
   tags: mysql

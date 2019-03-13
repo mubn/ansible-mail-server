@@ -22,7 +22,7 @@
 - name: Template dovecot-sql.conf
   template:
     src: templates/dovecot-sql.j2
-    dest: /etc/dovecot/dovecot.conf
+    dest: /etc/dovecot/dovecot-sql.conf
     mode: "0440"
   tags: dovecot
 

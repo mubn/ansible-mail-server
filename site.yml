@@ -7,7 +7,7 @@
   roles:
     - general
     - certbot
-    - dovecot
     - mariadb
+    - dovecot
     - postfix
     - rspamd

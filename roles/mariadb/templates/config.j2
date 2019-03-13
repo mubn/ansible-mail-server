@@ -1,0 +1,4 @@
+use vmail;
+insert into domains (domain) values ('{{ domain }}');
+insert into accounts (username, domain, password, quota, enabled, sendonly) values ('{{ mail_user }}', '{{ domain }}', '{{ mail_user_pass_hash }}', 2048, true, false);
+insert into aliases (source_username, source_domain, destination_username, destination_domain, enabled) values ('alias', '{{ domain }}', '{{ mail_user }}', '{{ domain }}', true);

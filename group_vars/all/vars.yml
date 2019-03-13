@@ -1,8 +1,9 @@
 ---
-fqdn: mail.my.server
-hostname: mail
+host: mail
+domain: my.server
 ip_address: "{{ ansible_default_ipv4.address }}"
-mail_fqdn: "{{ fqdn }}"
-smtp_fqdn: smtp.my.server
-imap_fqdn: imap.my.server
-email_for_updates: mail@my.server
+mail_fqdn: "{{ host }}.{{ domain }}"
+smtp_fqdn: "smtp.{{ domain }}"
+imap_fqdn: imap.{{ domain }}
+mail_user: mail
+email_for_updates: "{{ mail_user }}@{{ domain }}"

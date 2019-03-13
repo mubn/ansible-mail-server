@@ -55,20 +55,19 @@
 
 - name: Set hostname
   hostname:
-    name: "{{ hostname }}"
+    name: "{{ host }}"
 
 - name: Add hostname to /etc/hosts
   lineinfile:
     dest: /etc/hosts
     regexp: "^127.0.1.1"
-    line: "127.0.1.1 {{ fqdn }} {{ hostname }}"
+    line: "127.0.1.1 {{ mail_fqdn }} {{ host }}"
     state: present
 
 - name: Set mailname
   copy:
     dest: "/etc/mailname"
-    content: |
-      {{ fqdn }}
+    content: "{{ mail_fqdn }}"
 
 - name: Restart systemd-logind
   service:
