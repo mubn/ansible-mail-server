@@ -79,6 +79,12 @@
     dest: /etc/postfix/without_ptr
   tags: postfix
 
+- name: Copy submission_header_cleanup
+  copy:
+    src: files/submission_header_cleanup
+    dest: /etc/postfix/submission_header_cleanup
+  tags: postfix
+
 - name: Create postmap
   command: postmap /etc/postfix/without_ptr
   tags: postfix
