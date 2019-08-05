@@ -5,7 +5,9 @@ This is an Ansible-Playbook for the great mail server setup described in this tu
 ## Requirements
 
 - Ansible >= 2.7
-- Debian Stretch server with ssh key login
+- Debian Stretch server
+- SSH key to login to the server
+- Public domain resolving to the server
 
 ## Configuration
 
@@ -30,14 +32,16 @@ Please change the password with `ansible-vault rekey group_vars/all/vault.yml`.
 rspamadm dkim_keygen -b 2048 -s 2019 -k 2019.key > 2019.txt
 ```
 
-and save it in this playbook.
-
 ## Run
 
 ```
 ansible-playbook -i ./hosts site.yml --ask-vault-pass
 ```
 
-## Todo's
+## Test
 
-Write tests
+Bats: https://github.com/sstephenson/bats
+
+```
+mail_user=USER mail_pass=PASS mail_host=HOST:587 bats smtp.bats
+```
