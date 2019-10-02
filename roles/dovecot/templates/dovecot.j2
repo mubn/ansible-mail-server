@@ -9,6 +9,8 @@ protocols = imap lmtp sieve
 #######################
 
 ssl = required
+# Allow protocol TLSv1 or better
+ssl_protocols = !SSLv3
 ssl_cert = </etc/letsencrypt/live/{{ mail_fqdn }}/fullchain.pem
 ssl_key = </etc/letsencrypt/live/{{ mail_fqdn }}/privkey.pem
 ssl_cipher_list = EDH+CAMELLIA:EDH+aRSA:EECDH+aRSA+AESGCM:EECDH+aRSA+SHA256:EECDH:+CAMELLIA128:+AES128:+SSLv3:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!DSS:!RC4:!SEED:!IDEA:!ECDSA:kEDH:CAMELLIA128-SHA:AES128-SHA
