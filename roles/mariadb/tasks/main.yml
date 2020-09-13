@@ -1,5 +1,6 @@
 ---
-# tasks file for mariadb
+# Tasks file for mariadb
+
 - name: Create user vmail
   command: >
     mysql --execute="grant select on vmail.* to 'vmail'@'localhost' identified by '{{ vmail_pass }}';"

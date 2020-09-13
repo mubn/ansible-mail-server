@@ -1,5 +1,6 @@
 ---
-# tasks file for rspamd
+# Tasks file for rspamd
+
 - name: Template worker-controller.inc
   template:
     src: templates/worker-controller.j2

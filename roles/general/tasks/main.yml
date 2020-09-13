@@ -1,4 +1,6 @@
 ---
+# General server tasks
+
 - name: Create mail user
   user:
     name: vmail

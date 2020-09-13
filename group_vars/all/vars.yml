@@ -1,4 +1,6 @@
 ---
+# Group vars for all hosts
+
 host: mail
 domain: my.server
 ip_address: "{{ ansible_default_ipv4.address }}"

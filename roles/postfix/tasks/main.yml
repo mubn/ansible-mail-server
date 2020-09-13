@@ -1,5 +1,6 @@
 ---
-# tasks file for postfix
+# Tasks file for postfix
+
 - name: Delete default config
   file:
     state: absent

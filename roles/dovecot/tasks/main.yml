@@ -1,5 +1,6 @@
 ---
-# tasks file for dovecot
+# Tasks file for dovecot
+
 - name: Delete default config
   file:
     state: absent

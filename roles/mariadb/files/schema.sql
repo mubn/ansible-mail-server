@@ -42,4 +42,3 @@ CREATE TABLE `tlspolicies` (
     PRIMARY KEY (`id`),
     UNIQUE KEY (`domain`)
 );
-
