@@ -48,21 +48,22 @@
   apt: upgrade=safe
 
 - name: Install programs
-  apt: pkg={{ item }} state=installed
-  with_items:
-    - certbot
-    - mariadb-server
-    - dovecot-core
-    - dovecot-imapd
-    - dovecot-lmtpd
-    - dovecot-mysql
-    - dovecot-sieve
-    - dovecot-managesieved
-    - rspamd
-    - redis-server
-    - postfix
-    - postfix-mysql
-    - redis-server
+  apt:
+    state: latest
+    pkg:
+      - certbot
+      - mariadb-server
+      - dovecot-core
+      - dovecot-imapd
+      - dovecot-lmtpd
+      - dovecot-mysql
+      - dovecot-sieve
+      - dovecot-managesieved
+      - rspamd
+      - redis-server
+      - postfix
+      - postfix-mysql
+      - redis-server
 
 - name: Set hostname
   hostname:
