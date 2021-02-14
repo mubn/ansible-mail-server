@@ -1,6 +1,24 @@
 ---
 # Tasks file for rspamd
 
+- name: Add the rspamd apt key
+  apt_key:
+    url: https://rspamd.com/apt-stable/gpg.key
+    state: present
+
+- name: Add rspamd repository
+  apt_repository:
+    repo: "deb http://rspamd.com/apt-stable/ stretch main"
+    state: present
+
+- name: Install packages
+  apt:
+    state: latest
+    pkg:
+      - rspamd
+      - redis-server
+    update_cache: yes
+
 - name: Template worker-controller.inc
   template:
     src: templates/worker-controller.j2

@@ -1,5 +1,11 @@
 ---
 # Tasks file for certbot
+- name: Install packages
+  apt:
+    state: latest
+    pkg:
+      - certbot
+    update_cache: yes
 
 - name: Setup cron for weekly cert renew
   cron:

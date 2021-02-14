@@ -2,12 +2,11 @@
 # This is the top-level playbook
 
 - hosts: all
-  user: root
-
+  become: yes
   roles:
     - general
     - certbot
     - mariadb
     - dovecot
-    - postfix
     - rspamd
+    - postfix

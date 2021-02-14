@@ -1,6 +1,14 @@
 ---
 # Tasks file for postfix
 
+- name: Install packages
+  apt:
+    state: latest
+    pkg:
+      - postfix
+      - postfix-mysql
+    update_cache: yes
+
 - name: Delete default config
   file:
     state: absent

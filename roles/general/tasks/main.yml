@@ -22,6 +22,14 @@
     group: vmail
     mode: 0770
 
+- name: Update
+  apt:
+    update_cache: yes
+
+- name: Upgrade
+  apt:
+    upgrade: safe
+
 - name: Install base dependencies
   apt:
     pkg:
@@ -30,40 +38,6 @@
       - gnupg-agent
       - software-properties-common
     state: latest
-
-- name: Add the rspamd apt key
-  apt_key:
-    url: https://rspamd.com/apt-stable/gpg.key
-    state: present
-
-- name: Add rspamd repository
-  apt_repository:
-    repo: "deb http://rspamd.com/apt-stable/ stretch main"
-    state: present
-
-- name: Update
-  apt: update_cache=yes
-
-- name: Upgrade
-  apt: upgrade=safe
-
-- name: Install programs
-  apt:
-    state: latest
-    pkg:
-      - certbot
-      - mariadb-server
-      - dovecot-core
-      - dovecot-imapd
-      - dovecot-lmtpd
-      - dovecot-mysql
-      - dovecot-sieve
-      - dovecot-managesieved
-      - rspamd
-      - redis-server
-      - postfix
-      - postfix-mysql
-      - redis-server
 
 - name: Set hostname
   hostname:

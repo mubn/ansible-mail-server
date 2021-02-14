@@ -1,6 +1,18 @@
 ---
 # Tasks file for dovecot
 
+- name: Install packages
+  apt:
+    state: latest
+    pkg:
+      - dovecot-core
+      - dovecot-imapd
+      - dovecot-lmtpd
+      - dovecot-mysql
+      - dovecot-sieve
+      - dovecot-managesieved
+    update_cache: yes
+
 - name: Delete default config
   file:
     state: absent
