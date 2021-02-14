@@ -40,6 +40,23 @@ ansible-playbook -i ./hosts site.yml --ask-vault-pass
 
 ## Test
 
+### Molecule
+
+#### Install Molecule
+
+```
+pip3 install molecule molecule-vagrant python-vagrant
+
+```
+
+#### Run tests
+
+```
+ANSIBLE_VAULT_PASSWORD_FILE=<YOUR_VAULT_PASS_FILE_PATH> molecule test
+```
+
+### Bats
+
 Bats: https://github.com/sstephenson/bats
 
 ```

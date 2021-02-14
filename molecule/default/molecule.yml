@@ -1,0 +1,41 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: vagrant
+  provider:
+    name: virtualbox
+lint: |
+  set -e
+  yamllint .
+  ansible-lint
+  flake8
+platforms:
+  - name: mailserver
+    box: debian/stretch64
+    memory: 1024
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_ROLES_PATH: ../../roles
+  inventory:
+    links:
+      group_vars: ../../group_vars
+  lint:
+    name: ansible-lint
+verifier:
+  name: ansible
+  lint:
+    name: ansible-lint
+scenario:
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - verify
+    - cleanup
+    - destroy

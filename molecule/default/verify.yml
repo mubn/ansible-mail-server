@@ -1,0 +1,29 @@
+---
+- name: Verify
+  hosts: all
+  tasks:
+    - name: Get hostname
+      command: hostname
+      register: hostname
+    - name: Get username
+      command: getent passwd vmail
+      register: user_vmail
+    - name: mariadb is is_running?
+      command: pgrep mysqld
+      register: mariadb_is_running
+    - name: dovecot is_running?
+      command: pgrep dovecot
+      register: dovecot_is_running
+    - name: rspamd is_running?
+      command: pgrep rspamd
+      register: rspamd_is_running
+    - name: postfix is_running?
+      command: pgrep master
+      register: postfix_is_running
+    - assert:
+        that: '"{{ hostname.stdout }}" == "{{ inventory_hostname }}"'
+        that: '"{{ user_vmail.rc }}" == "0"'
+        that: '"{{ mariadb_is_running.rc }}" == "0"'
+        that: '"{{ dovecot_is_running.rc }}" == "0"'
+        that: '"{{ rspamd_is_running.rc }}" == "0"'
+        that: '"{{ postfix_is_running.rc }}" == "0"'
