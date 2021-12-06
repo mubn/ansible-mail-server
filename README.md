@@ -5,19 +5,23 @@ This is an Ansible-Playbook for the great mail server setup described in this tu
 ## Requirements
 
 - Ansible >= 2.7
-- Debian Stretch server
+- Server with Debian Bullseye operating system
 - SSH key to login to the server
 - Public domain resolving to the server
 
 ## Configuration
 
+### Inventory
+
+Set the hostname in the inventory file [hosts](hosts)
+
 ### Variables
 
-All variables are stored in `group_vars/all/vars.yml`. Set the values according to your server.
+All variables are stored in the [vars](group_vars/all/vars.yml) file. Set the values according to your server.
 
 ### Credentials
 
-Credentials are stored in [group_vars/all/vault.yml](group_vars/all/vault.yml). The Password is "vault".
+Credentials are stored in the [vault.yml](group_vars/all/vault.yml). The Password is "vault".
 Please change the password with `ansible-vault rekey group_vars/all/vault.yml`.
 
 - Database user: "vmail", pass: "vmail" (Please change it)
@@ -32,7 +36,7 @@ Please change the password with `ansible-vault rekey group_vars/all/vault.yml`.
 rspamadm dkim_keygen -b 2048 -s 2019 -k 2019.key > 2019.txt
 ```
 
-## Run
+## Run the playbook
 
 ```
 ansible-playbook -i ./hosts site.yml --ask-vault-pass

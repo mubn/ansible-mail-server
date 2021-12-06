@@ -8,7 +8,7 @@
 
 - name: Add rspamd repository
   apt_repository:
-    repo: "deb http://rspamd.com/apt-stable/ stretch main"
+    repo: "deb http://rspamd.com/apt-stable/ bullseye main"
     state: present
 
 - name: Install packages

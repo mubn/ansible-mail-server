@@ -35,6 +35,7 @@
     pkg:
       - apt-transport-https
       - ca-certificates
+      - gpg
       - gnupg-agent
       - software-properties-common
     state: latest
