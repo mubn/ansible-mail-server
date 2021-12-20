@@ -59,16 +59,28 @@
   file:
     path: /var/lib/rspamd/dkim/
     state: directory
-    owner: _rspamd
-    group: _rspamd
-    mode: "0440"
-  tags: rspamd
 
-- name: Copy and decrypt private key
-  copy:
-    src: files/2019.key
-    dest: /var/lib/rspamd/dkim/2019.key
-    decrypt: true
+- name: Check if a dkim key exists
+  stat:
+    path: /var/lib/rspamd/dkim/dkim_key.key
+  register: dkim_key
+
+- block:
+  - name: Generate dkim private key
+    shell: rspamadm dkim_keygen -b 2048 -s dkim_key -k /var/lib/rspamd/dkim/dkim_key.key > /var/lib/rspamd/dkim/dkim_key.txt
+  - name: Get dkim public key
+    command: cat /var/lib/rspamd/dkim/dkim_key.txt
+    register: dkim_public
+  - name: Show dkim public key
+    debug:
+      msg: "{{dkim_public.stdout}}"
+  when: dkim_key.stat.exists == false or rspamd_recreate_dkim_key == true
+
+- name: Chown dkim files
+  file:
+    path: /var/lib/rspamd/dkim/
+    state: directory
+    recurse: yes
     owner: _rspamd
     group: _rspamd
     mode: "0440"

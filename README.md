@@ -28,14 +28,6 @@ Please change the password with `ansible-vault rekey group_vars/all/vault.yml`.
 - Mail user: "mail", pass: "mail" (Please change it)
 - Rspam admin password: "rspamadmpw"
 
-### Keys
-
-- The DKIM-Key ist stored as vault file [roles/rspamd/files/2019.key](roles/rspamd/files/2019.key). The Password is "vault". Please generate your own Key on the Server with:
-
-```
-rspamadm dkim_keygen -b 2048 -s 2019 -k 2019.key > 2019.txt
-```
-
 ## Run the playbook
 
 ```
