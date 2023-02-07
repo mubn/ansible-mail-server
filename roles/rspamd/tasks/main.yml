@@ -22,7 +22,7 @@
 - name: Template worker-controller.inc
   template:
     src: templates/worker-controller.j2
-    dest: /etc/rspamd/local.d/worker-proxy.inc
+    dest: /etc/rspamd/local.d/worker-controller.inc
   tags: rspamd
 
 - name: Copy classifier-bayes.conf
