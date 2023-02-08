@@ -8,7 +8,7 @@
 
 - name: Add rspamd repository
   apt_repository:
-    repo: "deb http://rspamd.com/apt-stable/ bullseye main"
+    repo: "deb http://rspamd.com/apt-stable/ {{ ansible_lsb.codename|lower }} main"
     state: present
 
 - name: Install packages

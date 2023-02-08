@@ -5,7 +5,7 @@ This is an Ansible-Playbook for the great mail server setup described in this tu
 ## Requirements
 
 - Ansible >= 2.7
-- Server with Debian Bullseye operating system
+- Server with Debian Bullseye operating system (the installation on Ubuntu will also work, but is not tested)
 - SSH key to login to the server
 - Public domain resolving to the server
 
