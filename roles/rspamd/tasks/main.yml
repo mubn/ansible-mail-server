@@ -83,7 +83,7 @@
     recurse: yes
     owner: _rspamd
     group: _rspamd
-    mode: "0440"
+    mode: u=rX,g=rX,o= # capital 'X': execute flag only for directories
   tags: rspamd
 
 - name: Copy arc.conf
