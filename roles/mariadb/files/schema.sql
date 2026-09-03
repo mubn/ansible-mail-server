@@ -1,15 +1,11 @@
-CREATE DATABASE IF NOT EXISTS vmail CHARACTER SET 'utf8';
-
-USE vmail;
-
-CREATE TABLE `domains` (
+CREATE TABLE IF NOT EXISTS `domains` (
     `id` int unsigned NOT NULL AUTO_INCREMENT,
     `domain` varchar(255) NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY (`domain`)
 );
 
-CREATE TABLE `accounts` (
+CREATE TABLE IF NOT EXISTS `accounts` (
     `id` int unsigned NOT NULL AUTO_INCREMENT,
     `username` varchar(64) NOT NULL,
     `domain` varchar(255) NOT NULL,
@@ -22,7 +18,7 @@ CREATE TABLE `accounts` (
     FOREIGN KEY (`domain`) REFERENCES `domains` (`domain`)
 );
 
-CREATE TABLE `aliases` (
+CREATE TABLE IF NOT EXISTS `aliases` (
     `id` int unsigned NOT NULL AUTO_INCREMENT,
     `source_username` varchar(64) NOT NULL,
     `source_domain` varchar(255) NOT NULL,
@@ -34,7 +30,7 @@ CREATE TABLE `aliases` (
     FOREIGN KEY (`source_domain`) REFERENCES `domains` (`domain`)
 );
 
-CREATE TABLE `tlspolicies` (
+CREATE TABLE IF NOT EXISTS `tlspolicies` (
     `id` int unsigned NOT NULL AUTO_INCREMENT,
     `domain` varchar(255) NOT NULL,
     `policy` enum('none', 'may', 'encrypt', 'dane', 'dane-only', 'fingerprint', 'verify', 'secure') NOT NULL,

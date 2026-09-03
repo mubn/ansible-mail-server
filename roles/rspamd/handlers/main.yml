@@ -1,5 +1,5 @@
 ---
-- name: Reload dovecot
+- name: Reload rspamd
   ansible.builtin.service:
-    name: dovecot
+    name: rspamd
     state: reloaded

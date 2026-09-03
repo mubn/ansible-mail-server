@@ -1,40 +1,64 @@
 ---
-# Tasks file for mariadb
+- name: Install MariaDB and Python connector
+  ansible.builtin.apt:
+    name: "{{ mail_mysql_packages }}"
+    state: present
 
-- name: Install packages
-  apt:
-    state: latest
-    pkg:
-      - mariadb-server
-    update_cache: yes
+- name: Enable and start MariaDB
+  ansible.builtin.service:
+    name: mariadb
+    state: started
+    enabled: true
 
-- name: Create user vmail
-  command: >
-    mysql --execute="grant select on vmail.* to 'vmail'@'localhost' identified by '{{ vmail_pass }}';"
-  tags: mysql
+- name: Create vmail database
+  community.mysql.mysql_db:
+    name: "{{ mail_db_name }}"
+    encoding: utf8
+    state: present
+    login_unix_socket: "{{ mail_mysql_socket }}"
 
-- name: Copy database schema
-  copy:
-    src: files/schema.sql
-    dest: /tmp
-  tags: mysql
+- name: Create vmail database user
+  community.mysql.mysql_user:
+    name: "{{ mail_db_user }}"
+    password: "{{ mail_db_password }}"
+    host: localhost
+    priv: "{{ mail_db_name }}.*:SELECT"
+    state: present
+    login_unix_socket: "{{ mail_mysql_socket }}"
+  no_log: true
 
-- name: Copy mail config
-  template:
-    src: templates/config.j2
-    dest: /tmp/config.sql
-  tags: mysql
+- name: Deploy vmail schema
+  ansible.builtin.copy:
+    src: schema.sql
+    dest: /etc/mysql/vmail-schema.sql
+    owner: root
+    group: root
+    mode: "0600"
+  register: mail_schema_file
 
-- name: Import database schema
-  command: mysql --execute="source /tmp/schema.sql;"
-  tags: mysql
+- name: Import vmail schema
+  community.mysql.mysql_db:
+    name: "{{ mail_db_name }}"
+    state: import
+    target: /etc/mysql/vmail-schema.sql
+    login_unix_socket: "{{ mail_mysql_socket }}"
+  when: mail_schema_file is changed
 
-- name: Import mail config
-  command: mysql --execute="source /tmp/config.sql;"
-  tags: mysql
+- name: Deploy initial mailbox data
+  ansible.builtin.template:
+    src: bootstrap.sql.j2
+    dest: /etc/mysql/vmail-bootstrap.sql
+    owner: root
+    group: root
+    mode: "0600"
+  register: mail_bootstrap_file
+  no_log: true
 
-- name: Delete mail config
-  file:
-    state: absent
-    path: /tmp/config.sql
-  tags: mysql
+- name: Import initial mailbox data
+  community.mysql.mysql_db:
+    name: "{{ mail_db_name }}"
+    state: import
+    target: /etc/mysql/vmail-bootstrap.sql
+    login_unix_socket: "{{ mail_mysql_socket }}"
+  when: mail_bootstrap_file is changed
+  no_log: true

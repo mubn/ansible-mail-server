@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  role_name: dovecot
+  description: Dovecot IMAP, LMTP, and Sieve for virtual mail
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+dependencies: []

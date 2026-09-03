@@ -1,0 +1,12 @@
+---
+mail_vmail_user: vmail
+mail_vmail_home: /var/vmail
+mail_vmail_uid: 5000
+mail_vmail_gid: 5000
+mail_apt_upgrade: false
+mail_apt_cache_valid_time: 3600
+mail_base_packages:
+  - ca-certificates
+  - gnupg
+  - apt-transport-https
+  - openssl

@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  role_name: common
+  description: Base packages, hostname, and vmail system user for the mail server
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+dependencies: []

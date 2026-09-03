@@ -1,0 +1,10 @@
+---
+# Copy to vault.yml and encrypt:
+#   ansible-vault encrypt group_vars/mail/vault.yml
+#
+# Generate a Dovecot-compatible hash with:
+#   doveadm pw -s SHA512-CRYPT
+
+vmail_pass: change-me
+mail_user_pass_hash: "{SHA512-CRYPT}replace-me"
+rspamadm_pass: change-me

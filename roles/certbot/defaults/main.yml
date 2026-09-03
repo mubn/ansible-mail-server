@@ -1,0 +1,10 @@
+---
+mail_letsencrypt_enabled: true
+mail_tls_key_size: 4096
+mail_selfsigned_tls_dir: /etc/ssl/mail
+mail_selfsigned_days: 365
+mail_letsencrypt_live_dir: "/etc/letsencrypt/live/{{ mail_fqdn }}"
+mail_tls_cert_path: "{{ mail_letsencrypt_live_dir ~ '/fullchain.pem' if mail_letsencrypt_enabled | bool else mail_selfsigned_tls_dir ~ '/fullchain.pem' }}"
+mail_tls_key_path: "{{ mail_letsencrypt_live_dir ~ '/privkey.pem' if mail_letsencrypt_enabled | bool else mail_selfsigned_tls_dir ~ '/privkey.pem' }}"
+mail_selfsigned_packages:
+  - python3-cryptography

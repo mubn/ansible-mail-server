@@ -1,0 +1,12 @@
+---
+- name: Rebuild postfix without_ptr map
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/postmap
+      - /etc/postfix/without_ptr
+  changed_when: true
+
+- name: Reload postfix
+  ansible.builtin.service:
+    name: postfix
+    state: reloaded

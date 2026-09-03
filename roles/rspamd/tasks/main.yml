@@ -1,118 +1,146 @@
 ---
-# Tasks file for rspamd
+- name: Ensure APT keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
 
-- name: Add the rspamd apt key
-  apt_key:
+- name: Download Rspamd repository signing key
+  ansible.builtin.get_url:
     url: https://rspamd.com/apt-stable/gpg.key
+    dest: /etc/apt/keyrings/rspamd.asc
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Dearmor Rspamd repository signing key
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --batch
+      - --yes
+      - --dearmor
+      - --output
+      - /etc/apt/keyrings/rspamd.gpg
+      - /etc/apt/keyrings/rspamd.asc
+    creates: /etc/apt/keyrings/rspamd.gpg
+
+- name: Add Rspamd APT repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [signed-by=/etc/apt/keyrings/rspamd.gpg]
+      http://rspamd.com/apt-stable/
+      {{ ansible_facts['distribution_release'] }} main
+    filename: rspamd
+    state: present
+    update_cache: true
+
+- name: Install Rspamd and Redis
+  ansible.builtin.apt:
+    name: "{{ rspamd_packages }}"
     state: present
 
-- name: Add rspamd repository
-  apt_repository:
-    repo: "deb http://rspamd.com/apt-stable/ {{ ansible_lsb.codename|lower }} main"
-    state: present
+- name: Enable and start Redis
+  ansible.builtin.service:
+    name: redis-server
+    state: started
+    enabled: true
 
-- name: Install packages
-  apt:
-    state: latest
-    pkg:
-      - rspamd
-      - redis-server
-    update_cache: yes
-
-- name: Template worker-controller.inc
-  template:
-    src: templates/worker-controller.j2
+- name: Deploy Rspamd worker-controller configuration
+  ansible.builtin.template:
+    src: worker-controller.inc.j2
     dest: /etc/rspamd/local.d/worker-controller.inc
-  tags: rspamd
+    owner: root
+    group: _rspamd
+    mode: "0640"
+  notify: Reload rspamd
+  no_log: true
 
-- name: Copy classifier-bayes.conf
-  copy:
-    src: files/classifier-bayes.conf
-    dest: /etc/rspamd/local.d/classifier-bayes.conf
-  tags: rspamd
+- name: Deploy Rspamd local configuration
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/rspamd/local.d/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: "{{ rspamd_local_d_files }}"
+  notify: Reload rspamd
 
-- name: Copy logging.inc
-  copy:
-    src: files/logging.inc
-    dest: /etc/rspamd/local.d/logging.inc
-  tags: rspamd
-
-- name: Copy milter_headers.conf
-  copy:
-    src: files/milter_headers.conf
-    dest: /etc/rspamd/local.d/milter_headers.conf
-  tags: rspamd
-
-- name: Copy options.inc
-  copy:
-    src: files/options.inc
-    dest: /etc/rspamd/local.d/options.inc
-  tags: rspamd
-
-- name: Copy worker-normal.inc
-  copy:
-    src: files/worker-proxy.inc
-    dest: /etc/rspamd/local.d/worker-proxy.inc
-  tags: rspamd
-
-- name: Create directory for dkim
-  file:
-    path: /var/lib/rspamd/dkim/
+- name: Create DKIM key directory
+  ansible.builtin.file:
+    path: "{{ rspamd_dkim_dir }}"
     state: directory
+    owner: _rspamd
+    group: _rspamd
+    mode: "0750"
 
-- name: Check if a dkim key exists
-  stat:
-    path: /var/lib/rspamd/dkim/dkim_key.key
-  register: dkim_key
+- name: Remove DKIM key when recreation is requested
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ rspamd_dkim_dir }}/{{ rspamd_dkim_selector }}.key"
+    - "{{ rspamd_dkim_dir }}/{{ rspamd_dkim_selector }}.txt"
+  when: rspamd_recreate_dkim_key | bool
 
-- block:
-  - name: Generate dkim private key
-    shell: rspamadm dkim_keygen -b 2048 -s dkim_key -k /var/lib/rspamd/dkim/dkim_key.key > /var/lib/rspamd/dkim/dkim_key.txt
-  - name: Get dkim public key
-    command: cat /var/lib/rspamd/dkim/dkim_key.txt
-    register: dkim_public
-  - name: Show dkim public key
-    debug:
-      msg: "{{dkim_public.stdout}}"
-  when: dkim_key.stat.exists == false or rspamd_recreate_dkim_key == true
+- name: Generate DKIM signing key
+  ansible.builtin.command:
+    argv:
+      - rspamadm
+      - dkim_keygen
+      - -b
+      - "{{ rspamd_dkim_key_bits }}"
+      - -s
+      - "{{ rspamd_dkim_selector }}"
+      - -k
+      - "{{ rspamd_dkim_dir }}/{{ rspamd_dkim_selector }}.key"
+    creates: "{{ rspamd_dkim_dir }}/{{ rspamd_dkim_selector }}.key"
+  register: rspamd_dkim_keygen
 
-- name: Chown dkim files
-  file:
-    path: /var/lib/rspamd/dkim/
+- name: Store DKIM public key
+  ansible.builtin.copy:
+    dest: "{{ rspamd_dkim_dir }}/{{ rspamd_dkim_selector }}.txt"
+    content: "{{ rspamd_dkim_keygen.stdout }}\n"
+    owner: _rspamd
+    group: _rspamd
+    mode: "0440"
+  when: rspamd_dkim_keygen is changed
+
+- name: Restrict DKIM private key permissions
+  ansible.builtin.file:
+    path: "{{ rspamd_dkim_dir }}/{{ rspamd_dkim_selector }}.key"
+    owner: _rspamd
+    group: _rspamd
+    mode: "0440"
+
+- name: Display DKIM DNS record
+  ansible.builtin.debug:
+    msg: "{{ rspamd_dkim_keygen.stdout }}"
+  when: rspamd_dkim_keygen is changed
+
+- name: Restrict DKIM key directory permissions
+  ansible.builtin.file:
+    path: "{{ rspamd_dkim_dir }}"
     state: directory
-    recurse: yes
     owner: _rspamd
     group: _rspamd
-    mode: u=rX,g=rX,o= # capital 'X': execute flag only for directories
-  tags: rspamd
+    recurse: true
+    mode: u=rX,g=rX,o=
 
-- name: Copy arc.conf
-  copy:
-    src: files/arc.conf
-    dest: /etc/rspamd/local.d/arc.conf
-    owner: _rspamd
-    group: _rspamd
-    mode: "0440"
-  tags: rspamd
-
-- name: Copy dkim_signing.conf
-  copy:
-    src: files/dkim_signing.conf
-    dest: /etc/rspamd/local.d/dkim_signing.conf
+- name: Deploy restricted Rspamd local configuration
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/rspamd/local.d/{{ item }}"
     owner: _rspamd
     group: _rspamd
     mode: "0440"
-  tags: rspamd
+  loop: "{{ rspamd_local_d_restricted_templates }}"
+  notify: Reload rspamd
 
-- name: Copy redis.conf
-  copy:
-    src: files/redis.conf
-    dest: /etc/rspamd/local.d/redis.conf
-    owner: _rspamd
-    group: _rspamd
-    mode: "0440"
-  tags: redis
-
-- name: Reload Rspamd
-  command: systemctl reload rspamd
-  tags: rspamd
+- name: Enable and start Rspamd
+  ansible.builtin.service:
+    name: rspamd
+    state: started
+    enabled: true

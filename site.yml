@@ -1,12 +1,18 @@
 ---
-# This is the top-level playbook
-
-- hosts: all
-  become: yes
+- name: Configure mail server
+  hosts: mail
+  become: true
+  gather_facts: true
   roles:
-    - general
-    - certbot
-    - mariadb
-    - dovecot
-    - rspamd
-    - postfix
+    - role: common
+      tags: [common]
+    - role: certbot
+      tags: [certbot, tls]
+    - role: mariadb
+      tags: [mariadb, database]
+    - role: dovecot
+      tags: [dovecot]
+    - role: rspamd
+      tags: [rspamd]
+    - role: postfix
+      tags: [postfix]

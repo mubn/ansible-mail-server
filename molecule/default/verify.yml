@@ -1,29 +1,41 @@
 ---
-- name: Verify
-  hosts: all
+- name: Verify mail server
+  hosts: mail
+  gather_facts: true
   tasks:
-    - name: Get hostname
-      command: hostname
-      register: hostname
-    - name: Get username
-      command: getent passwd vmail
-      register: user_vmail
-    - name: mariadb is is_running?
-      command: pgrep mysqld
-      register: mariadb_is_running
-    - name: dovecot is_running?
-      command: pgrep dovecot
-      register: dovecot_is_running
-    - name: rspamd is_running?
-      command: pgrep rspamd
-      register: rspamd_is_running
-    - name: postfix is_running?
-      command: pgrep master
-      register: postfix_is_running
-    - assert:
-        that: '"{{ hostname.stdout }}" == "{{ inventory_hostname }}"'
-        that: '"{{ user_vmail.rc }}" == "0"'
-        that: '"{{ mariadb_is_running.rc }}" == "0"'
-        that: '"{{ dovecot_is_running.rc }}" == "0"'
-        that: '"{{ rspamd_is_running.rc }}" == "0"'
-        that: '"{{ postfix_is_running.rc }}" == "0"'
+    - name: Collect vmail account
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ mail_vmail_user | default('vmail') }}"
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Assert hostname was applied
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['hostname'] == mail_hostname
+        fail_msg: "Hostname '{{ ansible_facts['hostname'] }}' does not match '{{ mail_hostname }}'"
+
+    - name: Assert TLS certificate exists
+      ansible.builtin.stat:
+        path: "{{ mail_tls_cert_path }}"
+      register: mail_verify_tls_cert
+
+    - name: Assert TLS certificate is present
+      ansible.builtin.assert:
+        that:
+          - mail_verify_tls_cert.stat.exists
+        fail_msg: "TLS certificate '{{ mail_tls_cert_path }}' is missing"
+
+    - name: Assert required services are running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services[item].state == "running"
+        fail_msg: "{{ item }} is not running"
+      loop:
+        - mariadb.service
+        - dovecot.service
+        - redis-server.service
+        - rspamd.service
+        - postfix.service

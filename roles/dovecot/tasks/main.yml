@@ -1,67 +1,58 @@
 ---
-# Tasks file for dovecot
+- name: Install Dovecot packages
+  ansible.builtin.apt:
+    name: "{{ mail_dovecot_packages }}"
+    state: present
 
-- name: Install packages
-  apt:
-    state: latest
-    pkg:
-      - dovecot-core
-      - dovecot-imapd
-      - dovecot-lmtpd
-      - dovecot-mysql
-      - dovecot-sieve
-      - dovecot-managesieved
-    update_cache: yes
-
-- name: Delete default config
-  file:
-    state: absent
-    path: /etc/dovecot/
-  tags: dovecot
-
-- name: Create config directory
-  file:
+- name: Ensure Dovecot configuration directory exists
+  ansible.builtin.file:
     path: /etc/dovecot
     state: directory
-  tags: dovecot
+    owner: root
+    group: dovecot
+    mode: "0755"
 
-- name: Template dovecot.conf
-  template:
-    src: templates/dovecot.j2
+- name: Deploy dovecot.conf
+  ansible.builtin.template:
+    src: dovecot.conf.j2
     dest: /etc/dovecot/dovecot.conf
-    mode: "0644"
-  tags: dovecot
+    owner: root
+    group: root
+    mode: "{{ mail_dovecot_config_mode }}"
+  notify: Reload dovecot
 
-- name: Template dovecot-sql.conf
-  template:
-    src: templates/dovecot-sql.j2
+- name: Deploy Dovecot SQL configuration
+  ansible.builtin.template:
+    src: dovecot-sql.conf.j2
     dest: /etc/dovecot/dovecot-sql.conf
-    mode: "0440"
-  tags: dovecot
+    owner: root
+    group: dovecot
+    mode: "{{ mail_dovecot_sql_mode }}"
+  notify: Reload dovecot
+  no_log: true
 
-- name: Copy spam-global.sieve
-  copy:
-    src: files/spam-global.sieve
-    dest: /var/vmail/sieve/global/spam-global.sieve
-    owner: vmail
-    group: vmail
+- name: Deploy global Sieve scripts
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ mail_vmail_home }}/sieve/global/{{ item }}"
+    owner: "{{ mail_vmail_user }}"
+    group: "{{ mail_vmail_user }}"
     mode: "0644"
-  tags: dovecot
+  loop:
+    - spam-global.sieve
+    - learn-spam.sieve
+    - learn-ham.sieve
+  notify: Reload dovecot
 
-- name: Copy learn-spam.sieve
-  copy:
-    src: files/learn-spam.sieve
-    dest: /var/vmail/sieve/global/learn-spam.sieve
-    owner: vmail
-    group: vmail
-    mode: "0644"
-  tags: dovecot
+- name: Check Dovecot configuration
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/doveconf
+      - -n
+  changed_when: false
 
-- name: Copy learn-ham.sieve
-  copy:
-    src: files/learn-ham.sieve
-    dest: /var/vmail/sieve/global/learn-ham.sieve
-    owner: vmail
-    group: vmail
-    mode: "0644"
-  tags: dovecot
+- name: Enable and start Dovecot
+  ansible.builtin.service:
+    name: dovecot
+    state: started
+    enabled: true

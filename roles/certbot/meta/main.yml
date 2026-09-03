@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  role_name: certbot
+  description: TLS certificates via Let's Encrypt or self-signed fallback
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+dependencies: []
+collections:
+  - community.crypto

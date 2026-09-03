@@ -1,0 +1,6 @@
+---
+collections:
+  - name: community.mysql
+    version: ">=3.8.0"
+  - name: community.crypto
+    version: ">=2.20.0"

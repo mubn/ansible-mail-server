@@ -1,1 +1,19 @@
+---
 rspamd_recreate_dkim_key: false
+rspamd_dkim_selector: dkim_key
+rspamd_dkim_key_bits: 2048
+rspamd_dkim_dir: /var/lib/rspamd/dkim
+rspamd_packages:
+  - rspamd
+  - redis-server
+rspamd_local_d_files:
+  - classifier-bayes.conf
+  - logging.inc
+  - milter_headers.conf
+  - options.inc
+  - worker-normal.inc
+  - worker-proxy.inc
+  - redis.conf
+rspamd_local_d_restricted_templates:
+  - arc.conf
+  - dkim_signing.conf
