@@ -2,8 +2,10 @@
 - name: Rebuild postfix without_ptr map
   ansible.builtin.command:
     argv:
-      - /usr/sbin/postmap
+      - postmap
       - /etc/postfix/without_ptr
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   changed_when: true
 
 - name: Reload postfix

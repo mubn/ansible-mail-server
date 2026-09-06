@@ -8,3 +8,4 @@ mail_dovecot_packages:
   - dovecot-managesieved
 mail_dovecot_config_mode: "0644"
 mail_dovecot_sql_mode: "0440"
+mail_mysql_socket: /run/mysqld/mysqld.sock

@@ -12,6 +12,7 @@ mail_apt_upgrade: false
 mail_db_name: vmail
 mail_db_user: vmail
 mail_db_host: 127.0.0.1
+mail_mysql_socket: /run/mysqld/mysqld.sock
 mail_db_password: "{{ vmail_pass }}"
 
 mail_user_password_hash: "{{ mail_user_pass_hash }}"

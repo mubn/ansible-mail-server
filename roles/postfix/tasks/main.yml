@@ -71,9 +71,11 @@
 - name: Ensure without_ptr hash map exists
   ansible.builtin.command:
     argv:
-      - /usr/sbin/postmap
+      - postmap
       - /etc/postfix/without_ptr
     creates: /etc/postfix/without_ptr.db
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 - name: Deploy submission header cleanup map
   ansible.builtin.copy:
@@ -87,8 +89,10 @@
 - name: Check Postfix configuration
   ansible.builtin.command:
     argv:
-      - /usr/sbin/postfix
+      - postfix
       - check
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   changed_when: false
 
 - name: Enable and start Postfix

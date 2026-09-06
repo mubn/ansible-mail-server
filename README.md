@@ -6,7 +6,7 @@ Ansible playbook for the mail server described in [Thomas Leister's tutorial](ht
 
 - Ansible >= 2.14
 - Collections from `requirements.yml` (`ansible-galaxy collection install -r requirements.yml`)
-- Debian 11 (Bullseye) or 12 (Bookworm)
+- Debian 11 (Bullseye), 12 (Bookworm), or 13 (Trixie)
 - SSH access to the server
 - A public domain with DNS records pointing at the server
 

@@ -4,6 +4,21 @@
     name: "{{ mail_dovecot_packages }}"
     state: present
 
+- name: Collect Dovecot version
+  ansible.builtin.command:
+    argv:
+      - dovecot
+      - --version
+  register: mail_dovecot_version_cmd
+  changed_when: false
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+- name: Set Dovecot version facts
+  ansible.builtin.set_fact:
+    mail_dovecot_version: "{{ mail_dovecot_version_cmd.stdout.split()[0] }}"
+    mail_dovecot_v24: "{{ mail_dovecot_version_cmd.stdout.split()[0] is version('2.4', '>=') }}"
+
 - name: Ensure Dovecot configuration directory exists
   ansible.builtin.file:
     path: /etc/dovecot
@@ -12,7 +27,18 @@
     group: dovecot
     mode: "0755"
 
-- name: Deploy dovecot.conf
+- name: Deploy Dovecot 2.4 configuration
+  ansible.builtin.template:
+    src: dovecot-2.4.conf.j2
+    dest: /etc/dovecot/dovecot.conf
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Reload dovecot
+  no_log: true
+  when: mail_dovecot_v24 | bool
+
+- name: Deploy Dovecot 2.3 configuration
   ansible.builtin.template:
     src: dovecot.conf.j2
     dest: /etc/dovecot/dovecot.conf
@@ -20,6 +46,7 @@
     group: root
     mode: "{{ mail_dovecot_config_mode }}"
   notify: Reload dovecot
+  when: not (mail_dovecot_v24 | bool)
 
 - name: Deploy Dovecot SQL configuration
   ansible.builtin.template:
@@ -30,6 +57,7 @@
     mode: "{{ mail_dovecot_sql_mode }}"
   notify: Reload dovecot
   no_log: true
+  when: not (mail_dovecot_v24 | bool)
 
 - name: Deploy global Sieve scripts
   ansible.builtin.copy:
@@ -47,8 +75,10 @@
 - name: Check Dovecot configuration
   ansible.builtin.command:
     argv:
-      - /usr/sbin/doveconf
+      - doveconf
       - -n
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
   changed_when: false
 
 - name: Enable and start Dovecot

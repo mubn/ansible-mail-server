@@ -1,0 +1,168 @@
+dovecot_config_version = 2.4.0
+dovecot_storage_version = 2.4.0
+
+protocols {
+  lmtp = yes
+  imap = yes
+  sieve = yes
+}
+
+protocol imap {
+  mail_plugins {
+    imap_quota = yes
+    imap_sieve = yes
+  }
+  mail_max_userip_connections = 20
+  imap_idle_notify_interval = 29 mins
+}
+
+protocol lmtp {
+  mail_plugins {
+    sieve = yes
+  }
+  postmaster_address = postmaster@{{ mail_domain }}
+}
+
+ssl = required
+ssl_server_cert_file = {{ mail_tls_cert_path }}
+ssl_server_key_file = {{ mail_tls_key_path }}
+ssl_server_prefer_ciphers = server
+ssl_min_protocol = TLSv1.2
+
+service imap-login {
+  inet_listener imap {
+    port = 143
+  }
+}
+
+service managesieve-login {
+  inet_listener sieve {
+    port = 4190
+  }
+}
+
+service lmtp {
+  unix_listener /var/spool/postfix/private/dovecot-lmtp {
+    mode = 0660
+    group = postfix
+    user = postfix
+  }
+}
+
+service auth {
+  unix_listener /var/spool/postfix/private/auth {
+    mode = 0660
+    user = postfix
+    group = postfix
+  }
+
+  unix_listener auth-userdb {
+    mode = 0660
+    user = {{ mail_vmail_user }}
+    group = {{ mail_vmail_user }}
+  }
+}
+
+sql_driver = mysql
+mysql {{ mail_mysql_socket | default('/run/mysqld/mysqld.sock') }} {
+  user = {{ mail_db_user }}
+  password = {{ mail_db_password }}
+  dbname = {{ mail_db_name }}
+}
+
+auth_allow_cleartext = no
+auth_mechanisms = plain login
+auth_username_format = {{ '%{user | lower}' }}
+
+passdb sql {
+  default_password_scheme = SHA512-CRYPT
+  query = SELECT username AS user, domain, password FROM accounts WHERE username = '{{ '%{user | username | lower}' }}' AND domain = '{{ '%{user | domain | lower}' }}' AND enabled = true;
+}
+
+userdb sql {
+  query = SELECT concat(quota, 'M') AS quota_storage_size FROM accounts WHERE username = '{{ '%{user | username | lower}' }}' AND domain = '{{ '%{user | domain | lower}' }}' AND sendonly = false;
+  iterate_query = SELECT username, domain FROM accounts WHERE sendonly = false;
+}
+
+recipient_delimiter = +
+
+mail_uid = {{ mail_vmail_user }}
+mail_gid = {{ mail_vmail_user }}
+mail_privileged_group = {{ mail_vmail_user }}
+first_valid_uid = {{ mail_vmail_uid }}
+
+mail_home = {{ mail_vmail_home }}/mailboxes/{{ '%{user | domain}' }}/{{ '%{user | username}' }}
+mail_driver = maildir
+mail_path = ~/mail
+mailbox_list_layout = fs
+
+namespace inbox {
+  inbox = yes
+
+  mailbox Spam {
+    auto = subscribe
+    special_use = \Junk
+  }
+
+  mailbox Trash {
+    auto = subscribe
+    special_use = \Trash
+  }
+
+  mailbox Drafts {
+    auto = subscribe
+    special_use = \Drafts
+  }
+
+  mailbox Sent {
+    auto = subscribe
+    special_use = \Sent
+  }
+}
+
+mail_plugins {
+  quota = yes
+}
+
+sieve_plugins {
+  sieve_imapsieve = yes
+  sieve_extprograms = yes
+}
+
+sieve_script spam-global {
+  type = before
+  path = {{ mail_vmail_home }}/sieve/global/spam-global.sieve
+}
+
+sieve_script personal {
+  type = personal
+  path = {{ mail_vmail_home }}/sieve/{{ '%{user | domain}' }}/{{ '%{user | username}' }}/scripts
+  active_path = {{ mail_vmail_home }}/sieve/{{ '%{user | domain}' }}/{{ '%{user | username}' }}/active-script.sieve
+}
+
+mailbox Spam {
+  sieve_script spam {
+    type = before
+    cause = copy
+    path = {{ mail_vmail_home }}/sieve/global/learn-spam.sieve
+  }
+}
+
+imapsieve_from Spam {
+  sieve_script ham {
+    type = before
+    cause = copy
+    path = {{ mail_vmail_home }}/sieve/global/learn-ham.sieve
+  }
+}
+
+sieve_global_extensions {
+  vnd.dovecot.pipe = yes
+}
+sieve_pipe_bin_dir = /usr/bin
+
+quota_exceeded_message = User {{ '%{user}' }} has exhausted allowed storage space.
+
+quota "User quota" {
+  driver = count
+}

@@ -1,4 +1,7 @@
 ---
+mail_hostname: mail
+mail_domain: example.com
+mail_user: mail
 mail_vmail_user: vmail
 mail_vmail_home: /var/vmail
 mail_vmail_uid: 5000
