@@ -14,7 +14,7 @@ Ansible playbook for the mail server described in [Thomas Leister's tutorial](ht
 
 ```
 ansible.cfg
-inventory/hosts.yml          # inventory
+inventory/hosts.yml.example  # inventory template (copy to hosts.yml)
 group_vars/mail/             # host-group variables and vault
 roles/                       # common, certbot, mariadb, dovecot, rspamd, postfix
 site.yml                     # site playbook
@@ -24,7 +24,7 @@ site.yml                     # site playbook
 
 ### Inventory
 
-Set the mail server hostname in [inventory/hosts.yml](inventory/hosts.yml).
+Copy [inventory/hosts.yml.example](inventory/hosts.yml.example) to `inventory/hosts.yml` and set the mail server address. `inventory/hosts.yml` is gitignored.
 
 ### Variables
 

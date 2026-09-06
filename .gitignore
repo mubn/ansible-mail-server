@@ -1,3 +1,4 @@
+.venv/
 *.retry
 *.pyc
 __pycache__/
@@ -7,4 +8,5 @@ collections/
 .vault_pass
 .vault-pass
 group_vars/**/vault.yml
+inventory/hosts.yml
 *.log
