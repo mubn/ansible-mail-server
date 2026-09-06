@@ -24,11 +24,11 @@ site.yml                     # site playbook
 
 ### Inventory
 
-Copy [inventory/hosts.yml.example](inventory/hosts.yml.example) to `inventory/hosts.yml` and set the mail server address. `inventory/hosts.yml` is gitignored.
+Copy [inventory/hosts.yml.example](inventory/hosts.yml.example) to `inventory/hosts.yml` and set the host address, `mail_hostname`, `mail_domain`, and `mail_user`. `inventory/hosts.yml` is gitignored.
 
 ### Variables
 
-Public settings live in [group_vars/mail/vars.yml](group_vars/mail/vars.yml).
+Public settings live in [group_vars/mail/vars.yml](group_vars/mail/vars.yml). Host identity (`mail_hostname`, `mail_domain`, `mail_user`) is set in inventory.
 
 | Variable | Purpose |
 | --- | --- |

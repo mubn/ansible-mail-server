@@ -8,3 +8,4 @@ mail:
     ansible_user: root
     mail_hostname: mail
     mail_domain: example.com
+    mail_user: mail

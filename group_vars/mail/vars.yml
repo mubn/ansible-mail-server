@@ -1,14 +1,10 @@
 ---
-# Public mail-server settings. Override per environment as needed.
+# Shared mail-server settings. Set mail_hostname, mail_domain, and mail_user in inventory.
 
-mail_hostname: mail
-mail_domain: my.server
 mail_bind_ipv4: "{{ ansible_facts['default_ipv4']['address'] | default('127.0.0.1', true) }}"
 mail_fqdn: "{{ mail_hostname }}.{{ mail_domain }}"
 mail_smtp_fqdn: "smtp.{{ mail_domain }}"
 mail_imap_fqdn: "imap.{{ mail_domain }}"
-
-mail_user: mail
 mail_admin_email: "{{ mail_user }}@{{ mail_domain }}"
 mail_mailbox_quota_mb: 2048
 mail_apt_upgrade: false
