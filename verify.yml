@@ -1,0 +1,144 @@
+---
+- name: Verify mail server
+  hosts: mail
+  become: true
+  gather_facts: true
+  vars:
+    mail_test_ports:
+      - 25
+      - 143
+      - 587
+      - 4190
+  tasks:
+    - name: Collect vmail account
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ mail_vmail_user | default('vmail') }}"
+
+    - name: Gather service facts
+      ansible.builtin.service_facts:
+
+    - name: Assert hostname was applied
+      ansible.builtin.assert:
+        that:
+          - ansible_facts['hostname'] == mail_hostname
+        fail_msg: "Hostname '{{ ansible_facts['hostname'] }}' does not match '{{ mail_hostname }}'"
+
+    - name: Assert TLS certificate exists
+      ansible.builtin.stat:
+        path: "{{ mail_tls_cert_path }}"
+      register: mail_verify_tls_cert
+
+    - name: Assert TLS certificate is present
+      ansible.builtin.assert:
+        that:
+          - mail_verify_tls_cert.stat.exists
+        fail_msg: "TLS certificate '{{ mail_tls_cert_path }}' is missing"
+
+    - name: Assert required services are running
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.services[item].state == "running"
+        fail_msg: "{{ item }} is not running"
+      loop:
+        - mariadb.service
+        - dovecot.service
+        - redis-server.service
+        - rspamd.service
+        - postfix.service
+
+    - name: Assert mail ports are listening
+      ansible.builtin.wait_for:
+        host: 127.0.0.1
+        port: "{{ item }}"
+        timeout: 10
+      loop: "{{ mail_test_ports }}"
+
+    - name: Check Postfix configuration
+      ansible.builtin.command:
+        argv:
+          - postfix
+          - check
+      environment:
+        PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      changed_when: false
+
+    - name: Check Dovecot configuration
+      ansible.builtin.command:
+        argv:
+          - doveconf
+          - -n
+      environment:
+        PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      changed_when: false
+
+    - name: Query primary mailbox
+      community.mysql.mysql_query:
+        login_unix_socket: "{{ mail_mysql_socket | default('/run/mysqld/mysqld.sock') }}"
+        query: >-
+          SELECT username, domain, enabled, sendonly
+          FROM {{ mail_db_name }}.accounts
+          WHERE username = %s AND domain = %s
+        positional_args:
+          - "{{ mail_user }}"
+          - "{{ mail_domain }}"
+      register: mail_verify_mailbox
+
+    - name: Assert primary mailbox exists and is enabled
+      ansible.builtin.assert:
+        that:
+          - mail_verify_mailbox.query_result[0] | length == 1
+          - mail_verify_mailbox.query_result[0][0].enabled | bool
+          - not (mail_verify_mailbox.query_result[0][0].sendonly | bool)
+        fail_msg: "Mailbox {{ mail_user }}@{{ mail_domain }} is missing or disabled"
+
+    - name: Fetch submission certificate via STARTTLS
+      ansible.builtin.shell:
+        cmd: |
+          set -o pipefail
+          openssl s_client -starttls smtp -connect 127.0.0.1:587 -servername {{ mail_fqdn | quote }} </dev/null 2>/dev/null \
+            | openssl x509 -noout -subject -ext subjectAltName
+        executable: /bin/bash
+      register: mail_verify_submission_cert
+      changed_when: false
+
+    - name: Assert submission certificate matches the mail hostname
+      ansible.builtin.assert:
+        that:
+          - mail_fqdn in mail_verify_submission_cert.stdout
+        fail_msg: "STARTTLS certificate on port 587 does not include {{ mail_fqdn }}"
+
+    - name: Skip SMTP/IMAP roundtrip when no mailbox password was provided
+      ansible.builtin.debug:
+        msg: >-
+          Pass -e mail_test_password=SECRET to send a message through submission
+          and fetch it back over IMAP.
+      when: mail_test_password is not defined or mail_test_password | length == 0
+
+    - name: Install roundtrip helper
+      ansible.builtin.copy:
+        src: test/mail_roundtrip.py
+        dest: /usr/local/lib/mail-roundtrip.py
+        owner: root
+        group: root
+        mode: "0755"
+      when: mail_test_password is defined and mail_test_password | length > 0
+
+    - name: Send a message and fetch it from IMAP
+      ansible.builtin.command:
+        argv:
+          - python3
+          - /usr/local/lib/mail-roundtrip.py
+      environment:
+        MAIL_HOST: 127.0.0.1
+        MAIL_USER: "{{ mail_admin_email }}"
+        MAIL_PASSWORD: "{{ mail_test_password | default('') }}"
+        MAIL_VERIFY_TLS: "false"
+      register: mail_verify_roundtrip
+      no_log: true
+      when: mail_test_password is defined and mail_test_password | length > 0
+
+    - name: Show roundtrip result
+      ansible.builtin.debug:
+        msg: "{{ mail_verify_roundtrip.stdout }}"
+      when: mail_verify_roundtrip is defined and mail_verify_roundtrip.stdout is defined

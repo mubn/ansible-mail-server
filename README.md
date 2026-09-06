@@ -69,6 +69,20 @@ Limit a single role with tags, for example `--tags postfix`.
 
 ## Test
 
+After a playbook run, use the same inventory and vault:
+
+```
+ansible-playbook verify.yml --ask-vault-pass
+```
+
+That checks services, listening ports, Postfix/Dovecot config, the mailbox row in MariaDB, and the submission TLS certificate.
+
+The vault stores a password hash, not the mailbox password, so a full send/receive test is optional. Pass the plaintext mailbox password to send a message on submission (587) and fetch it from IMAP (143):
+
+```
+ansible-playbook verify.yml --ask-vault-pass -e mail_test_password=SECRET
+```
+
 ### Molecule
 
 ```
@@ -77,10 +91,4 @@ ANSIBLE_VAULT_PASSWORD_FILE=<YOUR_VAULT_PASS_FILE_PATH> molecule verify
 ANSIBLE_VAULT_PASSWORD_FILE=<YOUR_VAULT_PASS_FILE_PATH> molecule test
 ```
 
-Molecule disables Let's Encrypt and uses a self-signed certificate.
-
-### Bats
-
-```
-mail_user=USER mail_pass=PASS mail_host=HOST:587 bats test/smtp.bats
-```
+Molecule disables Let's Encrypt and uses a self-signed certificate. It runs the same `verify.yml` playbook.
