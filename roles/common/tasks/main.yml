@@ -1,0 +1,77 @@
+---
+- name: Assert required mail variables are defined
+  ansible.builtin.assert:
+    that:
+      - mail_hostname | length > 0
+      - mail_domain | length > 0
+      - mail_fqdn | length > 0
+      - mail_user | length > 0
+      - mail_admin_email | length > 0
+      - mail_db_password | length > 0
+      - mail_user_password_hash | length > 0
+      - rspamd_controller_password | length > 0
+    quiet: true
+
+- name: Create vmail group
+  ansible.builtin.group:
+    name: "{{ mail_vmail_user }}"
+    gid: "{{ mail_vmail_gid }}"
+    system: true
+    state: present
+
+- name: Create vmail user
+  ansible.builtin.user:
+    name: "{{ mail_vmail_user }}"
+    group: "{{ mail_vmail_user }}"
+    uid: "{{ mail_vmail_uid }}"
+    home: "{{ mail_vmail_home }}"
+    shell: /usr/sbin/nologin
+    system: true
+    create_home: true
+    state: present
+
+- name: Create vmail directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ mail_vmail_user }}"
+    group: "{{ mail_vmail_user }}"
+    mode: "0770"
+  loop:
+    - "{{ mail_vmail_home }}/sieve/global"
+    - "{{ mail_vmail_home }}/mailboxes"
+
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: "{{ mail_apt_cache_valid_time }}"
+
+- name: Upgrade installed packages
+  ansible.builtin.apt:
+    upgrade: safe
+  when: mail_apt_upgrade | bool
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name: "{{ mail_base_packages }}"
+    state: present
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ mail_hostname }}"
+  notify: Restart systemd-logind
+
+- name: Add hostname to /etc/hosts
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^127.0.1.1"
+    line: "127.0.1.1 {{ mail_fqdn }} {{ mail_hostname }}"
+    state: present
+
+- name: Set mailname
+  ansible.builtin.copy:
+    dest: /etc/mailname
+    content: "{{ mail_fqdn }}\n"
+    owner: root
+    group: root
+    mode: "0644"

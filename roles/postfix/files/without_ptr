@@ -1,0 +1,2 @@
+# IP addresses allowed to send without a valid PTR record
+# 192.0.2.1    OK

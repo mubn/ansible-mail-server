@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  role_name: mariadb
+  description: MariaDB and the vmail schema for virtual mailboxes
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+dependencies: []
+collections:
+  - community.mysql

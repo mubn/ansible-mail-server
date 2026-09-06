@@ -1,5 +1,0 @@
-From: Tester
-To: Tester
-Subject: Test mail
-
-Test

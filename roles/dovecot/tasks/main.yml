@@ -1,67 +1,88 @@
 ---
-# Tasks file for dovecot
+- name: Install Dovecot packages
+  ansible.builtin.apt:
+    name: "{{ mail_dovecot_packages }}"
+    state: present
 
-- name: Install packages
-  apt:
-    state: latest
-    pkg:
-      - dovecot-core
-      - dovecot-imapd
-      - dovecot-lmtpd
-      - dovecot-mysql
-      - dovecot-sieve
-      - dovecot-managesieved
-    update_cache: yes
+- name: Collect Dovecot version
+  ansible.builtin.command:
+    argv:
+      - dovecot
+      - --version
+  register: mail_dovecot_version_cmd
+  changed_when: false
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-- name: Delete default config
-  file:
-    state: absent
-    path: /etc/dovecot/
-  tags: dovecot
+- name: Set Dovecot version facts
+  ansible.builtin.set_fact:
+    mail_dovecot_version: "{{ mail_dovecot_version_cmd.stdout.split()[0] }}"
+    mail_dovecot_v24: "{{ mail_dovecot_version_cmd.stdout.split()[0] is version('2.4', '>=') }}"
 
-- name: Create config directory
-  file:
+- name: Ensure Dovecot configuration directory exists
+  ansible.builtin.file:
     path: /etc/dovecot
     state: directory
-  tags: dovecot
+    owner: root
+    group: dovecot
+    mode: "0755"
 
-- name: Template dovecot.conf
-  template:
-    src: templates/dovecot.j2
+- name: Deploy Dovecot 2.4 configuration
+  ansible.builtin.template:
+    src: dovecot-2.4.conf.j2
     dest: /etc/dovecot/dovecot.conf
-    mode: "0644"
-  tags: dovecot
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Reload dovecot
+  no_log: true
+  when: mail_dovecot_v24 | bool
 
-- name: Template dovecot-sql.conf
-  template:
-    src: templates/dovecot-sql.j2
+- name: Deploy Dovecot 2.3 configuration
+  ansible.builtin.template:
+    src: dovecot.conf.j2
+    dest: /etc/dovecot/dovecot.conf
+    owner: root
+    group: root
+    mode: "{{ mail_dovecot_config_mode }}"
+  notify: Reload dovecot
+  when: not (mail_dovecot_v24 | bool)
+
+- name: Deploy Dovecot SQL configuration
+  ansible.builtin.template:
+    src: dovecot-sql.conf.j2
     dest: /etc/dovecot/dovecot-sql.conf
-    mode: "0440"
-  tags: dovecot
+    owner: root
+    group: dovecot
+    mode: "{{ mail_dovecot_sql_mode }}"
+  notify: Reload dovecot
+  no_log: true
+  when: not (mail_dovecot_v24 | bool)
 
-- name: Copy spam-global.sieve
-  copy:
-    src: files/spam-global.sieve
-    dest: /var/vmail/sieve/global/spam-global.sieve
-    owner: vmail
-    group: vmail
+- name: Deploy global Sieve scripts
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "{{ mail_vmail_home }}/sieve/global/{{ item }}"
+    owner: "{{ mail_vmail_user }}"
+    group: "{{ mail_vmail_user }}"
     mode: "0644"
-  tags: dovecot
+  loop:
+    - spam-global.sieve
+    - learn-spam.sieve
+    - learn-ham.sieve
+  notify: Reload dovecot
 
-- name: Copy learn-spam.sieve
-  copy:
-    src: files/learn-spam.sieve
-    dest: /var/vmail/sieve/global/learn-spam.sieve
-    owner: vmail
-    group: vmail
-    mode: "0644"
-  tags: dovecot
+- name: Check Dovecot configuration
+  ansible.builtin.command:
+    argv:
+      - doveconf
+      - -n
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  changed_when: false
 
-- name: Copy learn-ham.sieve
-  copy:
-    src: files/learn-ham.sieve
-    dest: /var/vmail/sieve/global/learn-ham.sieve
-    owner: vmail
-    group: vmail
-    mode: "0644"
-  tags: dovecot
+- name: Enable and start Dovecot
+  ansible.builtin.service:
+    name: dovecot
+    state: started
+    enabled: true

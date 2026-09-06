@@ -1,107 +1,102 @@
 ---
-# Tasks file for postfix
+- name: Install Postfix packages
+  ansible.builtin.apt:
+    name: "{{ mail_postfix_packages }}"
+    state: present
 
-- name: Install packages
-  apt:
-    state: latest
-    pkg:
-      - postfix
-      - postfix-mysql
-    update_cache: yes
-
-- name: Delete default config
-  file:
+- name: Remove default SASL configuration directory
+  ansible.builtin.file:
+    path: /etc/postfix/sasl
     state: absent
-    path: /etc/postfix/sasl/
-  tags: postfix
 
-- name: Template main.cf
-  template:
-    src: templates/main.j2
+- name: Deploy main.cf
+  ansible.builtin.template:
+    src: main.cf.j2
     dest: /etc/postfix/main.cf
-  tags: postfix
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload postfix
 
-- name: Copy master.cf
-  copy:
-    src: files/master.cf
+- name: Deploy master.cf
+  ansible.builtin.copy:
+    src: master.cf
     dest: /etc/postfix/master.cf
-  tags: postfix
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload postfix
 
-- name: Create directory for sql config
-  file:
+- name: Create Postfix SQL map directory
+  ansible.builtin.file:
     path: /etc/postfix/sql
     state: directory
-    mode: "0640"
-  tags: postfix
+    owner: root
+    group: postfix
+    mode: "0750"
 
-- name: Template accounts.cf
-  template:
-    src: templates/sql/accounts.jq
-    dest: /etc/postfix/sql/accounts.cf
+- name: Deploy Postfix SQL maps
+  ansible.builtin.template:
+    src: sql-map.cf.j2
+    dest: "/etc/postfix/sql/{{ item.name }}.cf"
+    owner: root
+    group: postfix
     mode: "0640"
-  tags: postfix
+  loop: "{{ mail_postfix_sql_maps }}"
+  loop_control:
+    label: "{{ item.name }}"
+  notify: Reload postfix
+  no_log: true
 
-- name: Template aliases.cf
-  template:
-    src: templates/sql/aliases.jq
-    dest: /etc/postfix/sql/aliases.cf
-    mode: "0640"
-  tags: postfix
-
-- name: Template domains.cf
-  template:
-    src: templates/sql/domains.jq
-    dest: /etc/postfix/sql/domains.cf
-    mode: "0640"
-  tags: postfix
-
-- name: Template recipient-access.cf
-  template:
-    src: templates/sql/recipient-access.jq
-    dest: /etc/postfix/sql/recipient-access.cf
-    mode: "0640"
-  tags: postfix
-
-- name: Template sender-login-maps.cf
-  template:
-    src: templates/sql/sender-login-maps.jq
-    dest: /etc/postfix/sql/sender-login-maps.cf
-    mode: "0640"
-  tags: postfix
-
-- name: Template tls-policy.cf
-  template:
-    src: templates/sql/tls-policy.jq
-    dest: /etc/postfix/sql/tls-policy.cf
-    mode: "0640"
-  tags: postfix
-
-- name: Copy postscreen_access
-  copy:
-    src: files/postscreen_access
+- name: Deploy postscreen access list
+  ansible.builtin.copy:
+    src: postscreen_access
     dest: /etc/postfix/postscreen_access
-  tags: postfix
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload postfix
 
-- name: Copy without_ptr
-  copy:
-    src: files/without_ptr
+- name: Deploy without_ptr map
+  ansible.builtin.copy:
+    src: without_ptr
     dest: /etc/postfix/without_ptr
-  tags: postfix
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Rebuild postfix without_ptr map
+    - Reload postfix
 
-- name: Copy submission_header_cleanup
-  copy:
-    src: files/submission_header_cleanup
+- name: Ensure without_ptr hash map exists
+  ansible.builtin.command:
+    argv:
+      - postmap
+      - /etc/postfix/without_ptr
+    creates: /etc/postfix/without_ptr.db
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+- name: Deploy submission header cleanup map
+  ansible.builtin.copy:
+    src: submission_header_cleanup
     dest: /etc/postfix/submission_header_cleanup
-  tags: postfix
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload postfix
 
-- name: Create postmap
-  command: postmap /etc/postfix/without_ptr
-  tags: postfix
+- name: Check Postfix configuration
+  ansible.builtin.command:
+    argv:
+      - postfix
+      - check
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  changed_when: false
 
-- name: Newaliases
-  command: newaliases
-  tags: postfix
-
-- name: Reload Postfix
-  command: systemctl reload postfix
-  tags: postfix
+- name: Enable and start Postfix
+  ansible.builtin.service:
+    name: postfix
+    state: started
+    enabled: true

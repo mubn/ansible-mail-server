@@ -1,0 +1,33 @@
+USE {{ mail_db_name }};
+
+INSERT INTO domains (domain) VALUES ('{{ mail_domain }}')
+ON DUPLICATE KEY UPDATE domain = VALUES(domain);
+
+INSERT INTO accounts (username, domain, password, quota, enabled, sendonly)
+VALUES (
+    '{{ mail_user }}',
+    '{{ mail_domain }}',
+    '{{ mail_user_password_hash }}',
+    {{ mail_mailbox_quota_mb }},
+    true,
+    false
+)
+ON DUPLICATE KEY UPDATE
+    password = VALUES(password),
+    quota = VALUES(quota),
+    enabled = VALUES(enabled);
+
+INSERT INTO aliases (
+    source_username,
+    source_domain,
+    destination_username,
+    destination_domain,
+    enabled
+) VALUES (
+    'alias',
+    '{{ mail_domain }}',
+    '{{ mail_user }}',
+    '{{ mail_domain }}',
+    true
+)
+ON DUPLICATE KEY UPDATE enabled = VALUES(enabled);

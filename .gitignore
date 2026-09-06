@@ -1,1 +1,12 @@
+.venv/
 *.retry
+*.pyc
+__pycache__/
+.cache/
+.molecule/
+collections/
+.vault_pass
+.vault-pass
+group_vars/**/vault.yml
+inventory/hosts.yml
+*.log

@@ -1,0 +1,9 @@
+---
+profile: moderate
+offline: true
+exclude_paths:
+  - .cache/
+  - .github/
+  - molecule/
+skip_list:
+  - yaml[line-length]

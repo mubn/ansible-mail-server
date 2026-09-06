@@ -1,0 +1,48 @@
+---
+- name: Install Python cryptography library
+  ansible.builtin.apt:
+    name: "{{ mail_selfsigned_packages }}"
+    state: present
+
+- name: Create self-signed certificate directory
+  ansible.builtin.file:
+    path: "{{ mail_selfsigned_tls_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Generate self-signed private key
+  community.crypto.openssl_privatekey:
+    path: "{{ mail_tls_key_path }}"
+    size: "{{ mail_tls_key_size | int }}"
+    type: RSA
+    mode: "0600"
+    owner: root
+    group: root
+
+- name: Generate certificate signing request
+  community.crypto.openssl_csr:
+    path: "{{ mail_selfsigned_tls_dir }}/{{ mail_fqdn }}.csr"
+    privatekey_path: "{{ mail_tls_key_path }}"
+    common_name: "{{ mail_fqdn }}"
+    subject_alt_name:
+      - "DNS:{{ mail_fqdn }}"
+      - "DNS:{{ mail_imap_fqdn }}"
+      - "DNS:{{ mail_smtp_fqdn }}"
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: Generate self-signed TLS certificate
+  community.crypto.x509_certificate:
+    path: "{{ mail_tls_cert_path }}"
+    privatekey_path: "{{ mail_tls_key_path }}"
+    csr_path: "{{ mail_selfsigned_tls_dir }}/{{ mail_fqdn }}.csr"
+    provider: selfsigned
+    selfsigned_not_after: "+{{ mail_selfsigned_days }}d"
+    selfsigned_digest: sha256
+    ignore_timestamps: true
+    owner: root
+    group: root
+    mode: "0644"

@@ -1,0 +1,26 @@
+---
+# Shared mail-server settings. Set mail_hostname, mail_domain, and mail_user in inventory.
+
+mail_bind_ipv4: "{{ ansible_facts['default_ipv4']['address'] | default('127.0.0.1', true) }}"
+mail_fqdn: "{{ mail_hostname }}.{{ mail_domain }}"
+mail_smtp_fqdn: "smtp.{{ mail_domain }}"
+mail_imap_fqdn: "imap.{{ mail_domain }}"
+mail_admin_email: "{{ mail_user }}@{{ mail_domain }}"
+mail_mailbox_quota_mb: 2048
+mail_apt_upgrade: false
+
+mail_db_name: vmail
+mail_db_user: vmail
+mail_db_host: 127.0.0.1
+mail_mysql_socket: /run/mysqld/mysqld.sock
+mail_db_password: "{{ vmail_pass }}"
+
+mail_user_password_hash: "{{ mail_user_pass_hash }}"
+
+mail_letsencrypt_enabled: true
+mail_selfsigned_tls_dir: /etc/ssl/mail
+mail_letsencrypt_live_dir: "/etc/letsencrypt/live/{{ mail_fqdn }}"
+mail_tls_cert_path: "{{ mail_letsencrypt_live_dir ~ '/fullchain.pem' if mail_letsencrypt_enabled | bool else mail_selfsigned_tls_dir ~ '/fullchain.pem' }}"
+mail_tls_key_path: "{{ mail_letsencrypt_live_dir ~ '/privkey.pem' if mail_letsencrypt_enabled | bool else mail_selfsigned_tls_dir ~ '/privkey.pem' }}"
+
+rspamd_controller_password: "{{ rspamadm_pass }}"
